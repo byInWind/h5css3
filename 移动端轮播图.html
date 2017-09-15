@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <style>
+
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    ul, ol {
+      list-style: none;
+    }
+
+    a {
+      text-decoration: none;
+      color: black;
+    }
+
+    h2 {
+      margin-top: 20px;
+      font-size: 17px;
+      text-align: center;
+    }
+
+    /* *************轮播图 */
+
+    #lbt {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+    }
+
+    #lbt ul {
+      position: absolute;
+      width: 500%;
+      /* 不能是left,应该是translate */
+      transform: translateX(-20%);
+      transition: all 0.2s;
+    }
+
+    #lbt ul li {
+      float: left;
+      width: 20%;
+      /*     transition: all 0.2s linear;
+       */
+    }
+
+    #lbt ol {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      margin-left: -50px;
+    }
+
+    #lbt ol li {
+      float: left;
+    }
+
+    #lbt ol li + li {
+      margin-left: 8px;
+    }
+
+    #lbt ol li {
+      display: block;
+      width: 16px;
+      height: 16px;
+      background: blue;
+      border-radius: 8px;
+      opacity: .5;
+    }
+
+    #lbt ol .current {
+      background: red;
+    }
+  </style>
+  <title>移动端轮播图</title>
+</head>
+<body>
+<!-- ******************移动端轮播图 -->
+<h2>移动端轮播图</h2><br>
+<section id="lbt">
+  <ul>
+    <li><a href="#"><img src="img/3.jpg" alt=""></a></li>
+    <li><a href="#"><img src="img/1.jpg" alt=""></a></li>
+    <li><a href="#"><img src="img/2.jpg" alt=""></a></li>
+    <li><a href="#"><img src="img/3.jpg" alt=""></a></li>
+    <li><a href="#"><img src="img/1.jpg" alt=""></a></li>
+  </ul>
+  <ol>
+    <li class="current"></li>
+    <li></li>
+    <li></li>
+  </ol>
+</section>
+<script>
+  /*
+   * 1.自动滚动  （无缝的滚动，无缝的滑动）     定时器  过渡
+   * 2.点对应改变   根据当前图片的索引          类操作api
+   * 3.滑动功能     图片盒子根据手机移动做定位   touch事件  转换 translateX
+   * 4.吸附效果     当移动的距离不够的时候       过渡的形式回到原定位
+   * 5.切换效果     上一张  下一张   当移动的距离足够的时候   过渡的形式 超过宽度的1/3
+   * */
+  var box = document.querySelector('#lbt ul');
+  //var width=  $('#lbt')[0].offsetWidth;
+  var width = document.querySelector('#lbt').offsetWidth;
+  var lis = document.querySelectorAll('#lbt ul li').length;
+  var olis = document.querySelectorAll('#lbt ol li');
+  var pie = 1;
+  var gunDong = function () {
+    //设置无缝滚动
+    pie++;
+    //  因此需要重新添加过度
+    box.style.transition = 'all 0.2s';
+    box.style.transform = 'translateX(' + width * -pie + 'px)';
+  }
+  var timed = setInterval(gunDong, 3000);
+
+  box.addEventListener('transitionend', function () {
+    if (pie >= lis - 1) {
+      pie = 1;
+      //所有过度被移除
+      box.style.transition = 'none';
+      box.style.webkitTransition = 'none';
+      box.style.transform = 'translateX(' + width * -pie + 'px)';
+    }
+    //虽然没有点击左按钮改变图片了，但是
+    //手指右滑也要改变图片，所以。。。
+    else if (pie <= 0) {
+      //最后一张图片已经在第一张了，所有-2
+      pie = lis - 2;
+      box.style.transition = 'none';
+      box.style.webkitTransition = 'none';
+      box.style.transform = 'translateX(' + width * -pie + 'px)';
+    }
+    // 设置点的改变
+    for (var i = 0; i < olis.length; i++) {
+      olis[i].removeAttribute('class')
+    }
+    ;
+    olis[pie - 1].className = 'current';
+  });
+  //滑动功能     图片盒子根据手机移动做定位   touch事件  转换 translateX
+
+  var isMove = false;
+  var start = 0;
+  var distance = 0;
+  box.addEventListener('touchstart', function (e) {
+    clearInterval(timed);
+    start = e.touches[0].clientX;
+  });
+  box.addEventListener('touchmove', function (e) {
+    isMove = true;
+    var move = e.touches[0].clientX;
+    distance = move - start;
+    // 手指移动时图也动
+    box.style.transform = 'translateX(' + (width * -pie + distance) + 'px)';
+  });
+  box.addEventListener('touchend', function (e) {
+    // timed=setInterval(gunDong, 1000);
+    if (isMove) {
+      if (Math.abs(distance) > width / 4) {
+        if (distance > 0) {
+          pie--;
+          //  box.style.transition='all 0.2s';
+          // box.style.transform= 'translateX('+width*(-pie-1)+'px)';
+        } else {
+          pie++;
+          // box.style.transition='all 0.2s';
+          // box.style.transform= 'translateX('+width*(-pie+1)+'px)';
+        }
+        box.style.transition = 'all 0.2s';
+        box.style.transform = 'translateX(' + width * -pie + 'px)';
+      }
+      else {
+        box.style.transition = 'all 0.2s';
+        box.style.transform = 'translateX(' + width * -pie + 'px)';
+      }
+    }
+    ;
+    //     var isMove=false;
+    // var start=0;
+    // var distance=0;
+    //  clearInterval(timed);
+    // timed=setInterval(gunDong, 3000); 
+  });
+
+
+</script>
+</body>
+</html>
